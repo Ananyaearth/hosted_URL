@@ -5,6 +5,7 @@ import faiss
 from sentence_transformers import SentenceTransformer
 import google.generativeai as genai
 import os
+import time
 
 # Streamlit config
 st.set_page_config(page_title="SHL Assessment Recommender", layout="wide")
@@ -25,21 +26,22 @@ def load_resources():
 
 @st.cache_resource
 def load_model():
-    try:
-        # Construct the model path
-        model_path = os.path.join(os.path.dirname(__file__), "models", "multi-qa-MiniLM-L6-cos-v1")
-        st.write(f"Attempting to load model from: {model_path}")  # Debug output
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Model directory not found: {model_path}")
-        if not os.path.isfile(os.path.join(model_path, "config.json")):
-            raise FileNotFoundError(f"config.json not found in: {model_path}")
-        model = SentenceTransformer(model_path, device='cpu')
-        st.write("Model loaded successfully!")
-        return model
-    except Exception as e:
-        st.error(f"Failed to load embedding model: {e}")
-        st.info("Ensure the 'models/multi-qa-MiniLM-L6-cos-v1' folder contains all required files (config.json, pytorch_model.bin, etc.) next to app.py.")
-        st.stop()
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # Load the model directly from Hugging Face
+            st.write(f"Attempting to load model 'multi-qa-MiniLM-L6-cos-v1' (Attempt {attempt + 1}/{max_retries})")
+            model = SentenceTransformer('multi-qa-MiniLM-L6-cos-v1', device='cpu')
+            st.write("Model loaded successfully!")
+            return model
+        except Exception as e:
+            st.warning(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(2)  # Wait before retrying
+            else:
+                st.error(f"Failed to load embedding model after {max_retries} attempts: {e}")
+                st.info("Check your internet connection or try a different model. See https://huggingface.co/sentence-transformers for options.")
+                st.stop()
 
 def get_document_from_index(df, i):
     row = df.iloc[i]
