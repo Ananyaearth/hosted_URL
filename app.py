@@ -10,8 +10,8 @@ import os
 st.set_page_config(page_title="SHL Assessment Recommender", layout="wide")
 st.title("🔍 SHL Assessment Recommender")
 
-# Gemini API key from env
-genai.configure(api_key="AIzaSyASKTzSNuMbJMdZWr81Xuw2hS1Poe3acZo")
+# Gemini API key from env (use GitHub Secrets for deployment)
+genai.configure(api_key=os.getenv("GEMINI_API_KEY", "AIzaSyASKTzSNuMbJMdZWr81Xuw2hS1Poe3acZo"))
 
 # Load dataset and FAISS
 def load_resources():
@@ -26,12 +26,13 @@ def load_resources():
 @st.cache_resource
 def load_model():
     try:
-        # Load the model, assuming it’s pre-downloaded to cache
-        model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
+        # Load the new model from the bundled folder
+        model_path = os.path.join(os.path.dirname(__file__), "models", "multi-qa-MiniLM-L6-cos-v1")
+        model = SentenceTransformer(model_path, device='cpu')
         return model
     except Exception as e:
         st.error(f"Failed to load embedding model: {e}")
-        st.info("The model 'all-MiniLM-L6-v2' could not be loaded. Pre-download it by running: `from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')` on a machine with internet access.")
+        st.info("Ensure the 'models/multi-qa-MiniLM-L6-cos-v1' folder contains the model files (config.json, pytorch_model.bin, etc.).")
         st.stop()
 
 def get_document_from_index(df, i):
