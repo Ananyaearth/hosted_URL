@@ -26,11 +26,12 @@ def load_resources():
 @st.cache_resource
 def load_model():
     try:
-        model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
+        # Load the model from cache, no internet required
+        model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu', local_files_only=True)
         return model
     except Exception as e:
         st.error(f"Failed to load embedding model: {e}")
-        st.info("Please ensure an internet connection or pre-download the model 'all-MiniLM-L6-v2'.")
+        st.info("The model 'all-MiniLM-L6-v2' could not be loaded. Pre-download it by running: `from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')` on a machine with internet access.")
         st.stop()
 
 def get_document_from_index(df, i):
