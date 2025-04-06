@@ -10,7 +10,7 @@ import os
 st.set_page_config(page_title="SHL Assessment Recommender", layout="wide")
 st.title("🔍 SHL Assessment Recommender")
 
-# Gemini API key
+# Gemini API key from env
 genai.configure(api_key="AIzaSyASKTzSNuMbJMdZWr81Xuw2hS1Poe3acZo")
 
 # Load dataset and FAISS
@@ -26,8 +26,8 @@ def load_resources():
 @st.cache_resource
 def load_model():
     try:
-        # Load the model from cache, no internet required
-        model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu', local_files_only=True)
+        # Load the model, assuming it’s pre-downloaded to cache
+        model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
         return model
     except Exception as e:
         st.error(f"Failed to load embedding model: {e}")
