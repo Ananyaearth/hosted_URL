@@ -10,18 +10,17 @@ import google.generativeai as genai
 # Set page config
 st.set_page_config(page_title="SHL Assessment Recommender", layout="wide")
 
-# Load Gemini API key from Streamlit secrets (replace this with st.secrets in production)
+# Load Gemini API key from Streamlit secrets (replace this with st.secrets["gemini_api_key"] in production)
 genai.configure(api_key="AIzaSyASKTzSNuMbJMdZWr81Xuw2hS1Poe3acZo")
 
 # Title
 st.title("🔍 SHL Assessment Recommender")
 
-# Load data and model
+# Load CSV data and prepare documents
 @st.cache_resource
 def load_data():
     df = pd.read_csv("shl_catalog_detailed.csv")
 
-    # Prepare structured documents
     documents = []
     for i, row in df.iterrows():
         content = f"""
@@ -38,13 +37,13 @@ def load_data():
         Languages: {row['Languages']}
         """
         documents.append(content.strip())
-
     return documents
 
+# Load model and FAISS index
 @st.cache_resource
 def load_model_and_index():
-    # Load model from local directory
-    model = SentenceTransformer('./all-MiniLM-L6-v2')  # Make sure this folder exists
+    # ✅ Load directly from HuggingFace (no zip, no folder needed)
+    model = SentenceTransformer('all-MiniLM-L6-v2')
 
     # Load FAISS index and mapping
     index = faiss.read_index("shl_faiss.index")
@@ -52,17 +51,17 @@ def load_model_and_index():
         index_to_doc = pickle.load(f)
     return model, index, index_to_doc
 
-# Load resources
+# Load everything
 documents = load_data()
 model, faiss_index, index_to_doc = load_model_and_index()
 
-# Search function
+# Search top-k documents
 def search_documents(query, top_k=10):
     query_embedding = model.encode([query]).astype('float32')
     distances, indices = faiss_index.search(query_embedding, top_k)
     return [index_to_doc[i] for i in indices[0]]
 
-# Gemini RAG
+# Gemini + RAG
 def ask_rag_question(query):
     context_chunks = search_documents(query)
     context = "\n\n".join(context_chunks)
@@ -88,7 +87,7 @@ You are an expert in HR assessments. Based on the context below, identify all as
     response = genai.generate_content(prompt)
     return response.text
 
-# Streamlit UI
+# UI
 query = st.text_input("🔎 Enter your hiring requirement (e.g., Python developer with collaboration skills)...")
 
 if query:
