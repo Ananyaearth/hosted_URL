@@ -39,17 +39,25 @@ def load_data():
         documents.append(content.strip())
     return documents
 
-# Load model and FAISS index
+# Load model and FAISS index from local files with error handling
 @st.cache_resource
 def load_model_and_index():
-    # ✅ Load directly from HuggingFace (no zip, no folder needed)
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    try:
+        # Load SentenceTransformer from local folder
+        model = SentenceTransformer('all-MiniLM-L6-v2')  # Must be uploaded alongside your app
+        
+        # Load FAISS index
+        faiss_index = faiss.read_index("shl_faiss.index")
+        
+        # Load index-to-doc mapping
+        with open("index_to_doc.pkl", "rb") as f:
+            index_to_doc = pickle.load(f)
+        
+        return model, faiss_index, index_to_doc
 
-    # Load FAISS index and mapping
-    index = faiss.read_index("shl_faiss.index")
-    with open("index_to_doc.pkl", "rb") as f:
-        index_to_doc = pickle.load(f)
-    return model, index, index_to_doc
+    except Exception as e:
+        st.error(f"Failed to load model or index: {e}")
+        st.stop()
 
 # Load everything
 documents = load_data()
