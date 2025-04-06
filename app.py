@@ -26,13 +26,19 @@ def load_resources():
 @st.cache_resource
 def load_model():
     try:
-        # Load the new model from the bundled folder
+        # Construct the model path
         model_path = os.path.join(os.path.dirname(__file__), "models", "multi-qa-MiniLM-L6-cos-v1")
+        st.write(f"Attempting to load model from: {model_path}")  # Debug output
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Model directory not found: {model_path}")
+        if not os.path.isfile(os.path.join(model_path, "config.json")):
+            raise FileNotFoundError(f"config.json not found in: {model_path}")
         model = SentenceTransformer(model_path, device='cpu')
+        st.write("Model loaded successfully!")
         return model
     except Exception as e:
         st.error(f"Failed to load embedding model: {e}")
-        st.info("Ensure the 'models/multi-qa-MiniLM-L6-cos-v1' folder contains the model files (config.json, pytorch_model.bin, etc.).")
+        st.info("Ensure the 'models/multi-qa-MiniLM-L6-cos-v1' folder contains all required files (config.json, pytorch_model.bin, etc.) next to app.py.")
         st.stop()
 
 def get_document_from_index(df, i):
