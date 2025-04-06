@@ -13,16 +13,23 @@ genai.configure(api_key="AIzaSyASKTzSNuMbJMdZWr81Xuw2hS1Poe3acZo")
 
 st.title("🔍 SHL Assessment Recommender")
 
-# Load CSV and FAISS index
-@st.cache_resource
 def load_resources():
     try:
         df = pd.read_csv("shl_catalog_detailed.csv")
         faiss_index = faiss.read_index("shl_catalog_index.faiss")
-        model = SentenceTransformer('all-MiniLM-L6-v2')
-        return df, faiss_index, model
+        return df, faiss_index
     except Exception as e:
-        st.error(f"Failed to load data or models: {e}")
+        st.error(f"Failed to load data or index: {e}")
+        st.stop()
+
+# Load SentenceTransformer separately outside cached function
+@st.cache_resource
+def load_model():
+    try:
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+        return model
+    except Exception as e:
+        st.error(f"Failed to load embedding model: {e}")
         st.stop()
 
 # Reconstruct document from DataFrame using row index
