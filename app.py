@@ -4,15 +4,16 @@ import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
 import google.generativeai as genai
+import os
 
-# Set Streamlit page config
+# Streamlit config
 st.set_page_config(page_title="SHL Assessment Recommender", layout="wide")
-
-# Configure Gemini API
-genai.configure(api_key="AIzaSyASKTzSNuMbJMdZWr81Xuw2hS1Poe3acZo")
-
 st.title("🔍 SHL Assessment Recommender")
 
+# Gemini API key from env
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Load dataset and FAISS
 def load_resources():
     try:
         df = pd.read_csv("shl_catalog_detailed.csv")
@@ -22,7 +23,6 @@ def load_resources():
         st.error(f"Failed to load data or index: {e}")
         st.stop()
 
-# Load SentenceTransformer separately outside cached function
 @st.cache_resource
 def load_model():
     try:
@@ -32,7 +32,6 @@ def load_model():
         st.error(f"Failed to load embedding model: {e}")
         st.stop()
 
-# Reconstruct document from DataFrame using row index
 def get_document_from_index(df, i):
     row = df.iloc[i]
     content = f"""
@@ -50,13 +49,11 @@ def get_document_from_index(df, i):
     """
     return content.strip()
 
-# Search top-k documents using FAISS
 def search_documents(query, model, faiss_index, df, top_k=10):
     query_embedding = model.encode([query]).astype('float32')
     distances, indices = faiss_index.search(query_embedding, top_k)
-    return [get_document_from_index(df, i) for i in indices[0]]
+    return [get_document_from_index(df, i) for i in indices[0] if i != -1]
 
-# Gemini + RAG logic
 def ask_rag_question(query, model, faiss_index, df):
     context_chunks = search_documents(query, model, faiss_index, df)
     context = "\n\n".join(context_chunks)
@@ -79,16 +76,20 @@ You are an expert in HR assessments. Based on the context below, identify all as
 
 ### Answer:
 """
-    response = genai.generate_content(prompt)
-    return response.text
+    try:
+        response = genai.generate_content(prompt)
+        return response.text or "⚠️ Gemini returned an empty response."
+    except Exception as e:
+        return f"⚠️ Gemini failed: {e}"
 
 # Load everything
-df, faiss_index, model = load_resources()
+df, faiss_index = load_resources()
+model = load_model()
 
-# UI for user input
+# User input
 query = st.text_input("🔎 Enter your hiring requirement (e.g., Python developer with collaboration skills)...")
 
-# Display answer
+# Output
 if query:
     with st.spinner("Thinking... 🤔"):
         answer = ask_rag_question(query, model, faiss_index, df)
