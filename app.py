@@ -10,7 +10,7 @@ import google.generativeai as genai
 # Set page config
 st.set_page_config(page_title="SHL Assessment Recommender", layout="wide")
 
-# Load Gemini API key from Streamlit secrets
+# Load Gemini API key from Streamlit secrets (replace this with st.secrets in production)
 genai.configure(api_key="AIzaSyASKTzSNuMbJMdZWr81Xuw2hS1Poe3acZo")
 
 # Title
@@ -43,14 +43,16 @@ def load_data():
 
 @st.cache_resource
 def load_model_and_index():
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    # Load model from local directory
+    model = SentenceTransformer('./all-MiniLM-L6-v2')  # Make sure this folder exists
+
+    # Load FAISS index and mapping
     index = faiss.read_index("shl_faiss.index")
     with open("index_to_doc.pkl", "rb") as f:
         index_to_doc = pickle.load(f)
     return model, index, index_to_doc
 
-
-
+# Load resources
 documents = load_data()
 model, faiss_index, index_to_doc = load_model_and_index()
 
