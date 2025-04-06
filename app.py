@@ -18,7 +18,7 @@ st.title("🔍 SHL Assessment Recommender")
 def load_resources():
     try:
         df = pd.read_csv("shl_catalog_detailed.csv")
-        faiss_index = faiss.read_index("shl_assessments_index.faiss")
+        faiss_index = faiss.read_index("shl_catalog_index.faiss")
         model = SentenceTransformer('all-MiniLM-L6-v2')
         return df, faiss_index, model
     except Exception as e:
