@@ -44,10 +44,12 @@ def load_data():
 @st.cache_resource
 def load_model_and_index():
     model = SentenceTransformer('all-MiniLM-L6-v2')
-    index = faiss.read_index("index.faiss")  # Precomputed index file
-    with open("index_mapping.pkl", "rb") as f:
+    index = faiss.read_index("shl_faiss.index")
+    with open("index_to_doc.pkl", "rb") as f:
         index_to_doc = pickle.load(f)
     return model, index, index_to_doc
+
+
 
 documents = load_data()
 model, faiss_index, index_to_doc = load_model_and_index()
