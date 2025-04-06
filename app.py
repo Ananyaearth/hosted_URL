@@ -11,7 +11,7 @@ import google.generativeai as genai
 st.set_page_config(page_title="SHL Assessment Recommender", layout="wide")
 
 # Load Gemini API key from Streamlit secrets
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+genai.configure(api_key="AIzaSyASKTzSNuMbJMdZWr81Xuw2hS1Poe3acZo")
 
 # Title
 st.title("🔍 SHL Assessment Recommender")
