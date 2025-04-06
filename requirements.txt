@@ -1,8 +1,8 @@
 streamlit==1.32.0
 pandas==2.2.2
 numpy==1.26.4
-faiss-cpu==1.8.0  # Use faiss-cpu for CPU-only systems; switch to faiss-gpu if you have GPU support
+faiss-cpu==1.8.0
 sentence-transformers==2.7.0
 google-generativeai==0.5.2
-torch==2.2.2  # Required by sentence-transformers for model inference
-transformers==4.39.3  # Core dependency for sentence-transformers
+torch==2.2.2
+transformers==4.39.3
